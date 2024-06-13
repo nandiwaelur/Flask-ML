@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify
 from predict import load_data, destination_recommendations
 import numpy as np
+from flask_cors import CORS, cross_origin
+import os
 
 app = Flask(__name__)
+CORS(app, origins="*")
 
 # Load data and cosine similarity matrix
 data, cosine_sim_df = load_data()
@@ -41,4 +44,7 @@ def recommend_destinations():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(
+        os.environ.get("PORT", 8080)
+    )  # Use the PORT environment variable if it's set, otherwise default to 8080
+    app.run(host="0.0.0.0", port=port, debug=True)

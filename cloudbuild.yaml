@@ -1,25 +1,32 @@
 steps:
-    - name: gcr.io/cloud-builders/docker
+    # Build the Docker image
+    - name: "gcr.io/cloud-builders/docker"
       args:
           - "build"
           - "-t"
-          - "asia-southeast2-docker.pkg.dev/$PROJECT_ID/jalanku-artifact/data-vis:$COMMIT_SHA"
+          - "gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA"
           - "."
-    - name: gcr.io/cloud-builders/docker
+
+    # Push the Docker image to Google Container Registry (GCR)
+    - name: "gcr.io/cloud-builders/docker"
       args:
           - "push"
-          - "asia-southeast2-docker.pkg.dev/$PROJECT_ID/jalanku-artifact/data-vis:$COMMIT_SHA"
+          - "gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA"
+
+    # Deploy the Docker image to Cloud Run
     - name: "gcr.io/cloud-builders/gcloud"
-      entrypoint: gcloud
       args:
           - "run"
           - "deploy"
-          - "model-vis"
-          - "--image=asia-southeast2-docker.pkg.dev/$PROJECT_ID/jalanku-artifact/data-vis:$COMMIT_SHA"
-          - "--region=asia-southeast2"
-          - "--cpu=1"
-          - "--memory=512Mi"
-          - "--allow-unauthenticated"
+          - "flask-app"
+          - "--image=gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA"
+          - "--platform=managed"
+          - "--region=YOUR_REGION" # Replace with your desired region
+          - "--allow-unauthenticated" # Allow unauthenticated access if needed
+          - "--port=8080" # Specify the port your application listens on
+          - "--cpu=1" # Specify CPU allocation (adjust as needed)
+          - "--memory=512Mi" # Specify memory allocation (adjust as needed)
+          - "--timeout=300" # Set the maximum request timeout (adjust as needed)
+
 images:
-    - "asia-southeast2-docker.pkg.dev/$PROJECT_ID/jalanku-artifact/data-vis:$COMMIT_SHA"
-logsBucket: "gs://jalanku-bucket/logs"
+    - "gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA"
