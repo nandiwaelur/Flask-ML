@@ -42,6 +42,21 @@ def recommend_destinations():
     else:
         return jsonify({'error': 'Only POST requests are allowed for this endpoint'}), 405
 
+@app.route('/recommend/<destination_name>', methods=['GET'])
+def recommend_destinations_get(destination_name):
+    # Get recommendations based on destination_name
+    if destination_name in data["destination_name"].values:
+        recommendations = destination_recommendations(destination_name, data, cosine_sim_df)
+    else:
+        random_destination = np.random.choice(data["destination_name"].values)
+        recommendations = destination_recommendations(random_destination, data, cosine_sim_df)
+
+    json_results = {
+        f"recommendation_{i+1}": rec
+        for i, rec in enumerate(recommendations)
+    }
+
+    return jsonify(json_results)
 
 if __name__ == '__main__':
     port = int(
