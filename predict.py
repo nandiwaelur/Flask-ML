@@ -4,10 +4,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import json
 
+
 # Function to load and preprocess data
 def load_data():
     # Load Dataset
-    url_tour = "https://raw.githubusercontent.com/Vinzzztty/playground-data-analyst/main/Dataset/pariwisata_jogja/tour.csv"
+    url_tour = "https://raw.githubusercontent.com/Vinzzztty/playground-data-analyst/main/Dataset/pariwisata_jogja/tour2.csv"
     url_rating = "https://raw.githubusercontent.com/Vinzzztty/playground-data-analyst/main/Dataset/pariwisata_jogja/tour_rating.csv"
     url_user = "https://raw.githubusercontent.com/Vinzzztty/playground-data-analyst/main/Dataset/pariwisata_jogja/user.csv"
 
@@ -27,7 +28,17 @@ def load_data():
     all_tour_rate = rating
     all_tour = pd.merge(
         all_tour_rate,
-        tour[["Place_Id", "Place_Name", "Category", "Rating", "Price", "Description"]],
+        tour[
+            [
+                "Place_Id",
+                "Place_Name",
+                "Category",
+                "Rating",
+                "Price",
+                "Description",
+                "Image",
+            ]
+        ],
         on="Place_Id",
         how="left",
     )
@@ -42,6 +53,8 @@ def load_data():
     destination_price = preparation["Price"].tolist()
     destination_description = preparation["Description"].tolist()
     destination_rating = preparation["Rating"].tolist()
+    destination_image = preparation["Image"].tolist()
+
     data = pd.DataFrame(
         {
             "id": destination_id,
@@ -50,6 +63,7 @@ def load_data():
             "price": destination_price,
             "description": destination_description,
             "rating": destination_rating,
+            "image": destination_image,
         }
     )
 
@@ -67,6 +81,7 @@ def load_data():
 
     return data, cosine_sim_df
 
+
 # Function to compute recommendations
 def destination_recommendations(
     nama_destinasi,
@@ -75,7 +90,9 @@ def destination_recommendations(
     k=6,
 ):
     similarity_data = cosine_sim_df
-    items = data[["destination_name", "category", "price", "description", "rating"]]
+    items = data[
+        ["destination_name", "category", "price", "description", "rating", "image"]
+    ]
 
     index = (
         similarity_data.loc[:, nama_destinasi]
@@ -89,12 +106,15 @@ def destination_recommendations(
     recommendations = []
     for dest_name in closest:
         dest_row = items[items["destination_name"] == dest_name].iloc[0]
-        recommendations.append({
-            "destination_name": dest_row["destination_name"],
-            "category": dest_row["category"],
-            "price": int(dest_row["price"]),  # Convert price to int
-            "description": dest_row["description"],
-            "rating": int(dest_row["rating"])  # Convert rating to int
-        })
+        recommendations.append(
+            {
+                "destination_name": dest_row["destination_name"],
+                "category": dest_row["category"],
+                "price": int(dest_row["price"]),  # Convert price to int
+                "description": dest_row["description"],
+                "rating": int(dest_row["rating"]),  # Convert rating to int
+                "image": dest_row["image"],
+            }
+        )
 
     return recommendations
